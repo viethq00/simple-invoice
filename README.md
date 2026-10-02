@@ -17,7 +17,7 @@ being stored.
 All you need is Docker with Compose.
 
 ```sh
-git clone <repository-url> simple-invoice
+git clone https://github.com/viethq00/simple-invoice.git
 cd simple-invoice
 docker compose up --build    # or: docker-compose up --build
 ```
