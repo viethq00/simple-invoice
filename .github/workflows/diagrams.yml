@@ -1,0 +1,55 @@
+name: Diagrams
+
+# Regenerates docs/diagrams from the code. On a pull request, one comment shows the diagrams
+# that changed, and the job fails if the committed docs/diagrams is out of date.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: diagrams-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  diagrams:
+    name: Generate diagrams, comment on the pull request
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The comment compares against the base commit.
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      # Testcontainers starts PostgreSQL in Docker for the data dictionary.
+      - run: npm run diagrams
+      - name: Comment on the pull request
+        if: github.event_name == 'pull_request'
+        run: npm run diagrams:comment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      - name: Check that docs/diagrams is up to date
+        run: |
+          if [ -n "$(git status --porcelain -- ../docs/diagrams)" ]; then
+            git status --short -- ../docs/diagrams
+            git diff --stat -- ../docs/diagrams
+            echo "::error::docs/diagrams doesn't match the code. Bring the branch up to date with main, run 'npm run diagrams' and commit the result."
+            exit 1
+          fi
