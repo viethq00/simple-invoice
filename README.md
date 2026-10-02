@@ -3,6 +3,12 @@
 Invoicing app for the 101 Digital full-stack assessment (v2.3.1): a React + TypeScript frontend, a
 NestJS + TypeScript API and PostgreSQL.
 
+> [!IMPORTANT]
+> **[Open the acceptance report](https://viethq00.github.io/simple-invoice/acceptance-report/)**:
+> every feature tested end to end in Chrome, Safari's engine and Firefox, on desktop and on phones,
+> with a screenshot of every screen, plus the API checks, the Docker checks and the test suites.
+> The same page is in [`docs/acceptance-report`](docs/acceptance-report/) to open from a clone.
+
 It has the four features from the assessment: sign-in, the invoice list (search, status filter,
 sorting and server-side paging), the invoice detail page, and creating an invoice with one line
 item. Totals are calculated by the API, and Overdue is worked out when invoices are read instead of
