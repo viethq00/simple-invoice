@@ -1,0 +1,72 @@
+# Rendered by the nginx image's envsubst step. BACKEND_UPSTREAM is the API's host:port,
+# NGINX_RESOLVER the DNS server for it (127.0.0.11 is Docker's).
+
+server {
+  listen 80;
+  listen [::]:80;
+  server_name _;
+  root /usr/share/nginx/html;
+  index index.html;
+
+  server_tokens off;
+  client_max_body_size 1m;
+
+  gzip on;
+  gzip_vary on;
+  gzip_comp_level 6;
+  gzip_min_length 1024;
+  gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+
+  # Inherited by every location below (none of them set add_header).
+  # 'unsafe-inline' styles because the toast library injects its stylesheet at runtime.
+  add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
+  add_header X-Content-Type-Options "nosniff" always;
+  add_header X-Frame-Options "DENY" always;
+  add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+  add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+
+  # Resolve the API per request, so nginx starts even while the API is down.
+  resolver ${NGINX_RESOLVER} valid=10s ipv6=off;
+  set $api_upstream http://${BACKEND_UPSTREAM};
+
+  # /api/invoices -> <backend>/invoices, same origin so the auth cookie stays first-party.
+  location /api/ {
+    rewrite ^/api/(.*)$ /$1 break;
+    proxy_pass $api_upstream;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host $host;
+    # The server-level headers already apply here, so drop the API's copies.
+    proxy_hide_header Content-Security-Policy;
+    proxy_hide_header X-Content-Type-Options;
+    proxy_hide_header X-Frame-Options;
+    proxy_hide_header Referrer-Policy;
+    proxy_connect_timeout 5s;
+    proxy_read_timeout 30s;
+  }
+
+  location = /healthz {
+    access_log off;
+    default_type text/plain;
+    return 200 "ok\n";
+  }
+
+  # Fingerprinted build output: cache for a year.
+  location /assets/ {
+    expires 1y;
+    try_files $uri =404;
+  }
+
+  # Always revalidate index.html so a new deploy is picked up.
+  location = /index.html {
+    expires -1;
+  }
+
+  # SPA fallback for client-side routes.
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+}

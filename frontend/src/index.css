@@ -1,0 +1,147 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/archivo/wdth.css';
+
+@theme {
+  --font-sans: 'Archivo Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-ink: #15233f;
+  --color-ink-soft: #4a5873;
+  --color-desk: #e8ecf1;
+  --color-paper: #ffffff;
+  --color-rule: #d3dae4;
+  --color-rule-strong: #b7c1cf;
+  --color-pen: #2747d9;
+  --color-pen-deep: #1d37b0;
+  --color-pen-wash: #e7ecfd;
+
+  /* Bright tone for marks, ink tone for small text on the wash (AA contrast). */
+  --color-draft: #5d6675;
+  --color-draft-ink: #4d5563;
+  --color-draft-wash: #edeff2;
+  --color-pending: #a86a00;
+  --color-pending-ink: #7a4d00;
+  --color-pending-wash: #fff3d9;
+  --color-paid: #17794a;
+  --color-paid-ink: #0f6339;
+  --color-paid-wash: #e2f3e9;
+  --color-overdue: #c2342d;
+  --color-overdue-ink: #a3241e;
+  --color-overdue-wash: #fbe5e3;
+
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.3125rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.75rem;
+  --text-3xl--line-height: 2.125rem;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 2.625rem;
+
+  --radius-control: 6px;
+  --radius-sheet: 2px;
+
+  --shadow-paper: 0 1px 2px rgb(21 35 63 / 0.07), 0 14px 32px -14px rgb(21 35 63 / 0.26);
+  --shadow-paper-sm: 0 1px 2px rgb(21 35 63 / 0.06), 0 4px 12px -6px rgb(21 35 63 / 0.14);
+}
+
+@utility font-display {
+  font-stretch: 118%;
+  font-weight: 760;
+  letter-spacing: -0.012em;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--color-desk);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-pen);
+    outline-offset: 2px;
+  }
+
+  /* Headings are focused by script after navigation, so no focus ring. */
+  [data-route-focus]:focus {
+    outline: none;
+  }
+
+  input[type='date']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .stamp {
+    display: inline-block;
+    padding: 0.3rem 0.85rem 0.25rem;
+    border: 4px double currentColor;
+    border-radius: 6px;
+    font-stretch: 125%;
+    font-weight: 800;
+    font-size: 1.125rem;
+    line-height: 1.4rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transform: rotate(-8deg);
+    opacity: 0.86;
+    mix-blend-mode: multiply;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.9'/%3E%3C/filter%3E%3Crect width='160' height='60' filter='url(%23n)'/%3E%3C/svg%3E");
+    mask-size: 160px 60px;
+  }
+
+  .stamp-draft {
+    color: var(--color-draft);
+  }
+  .stamp-pending {
+    color: var(--color-pending);
+  }
+  .stamp-paid {
+    color: var(--color-paid);
+  }
+  .stamp-overdue {
+    color: var(--color-overdue);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .stamp {
+    mix-blend-mode: normal;
+  }
+}
