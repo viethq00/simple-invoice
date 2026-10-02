@@ -1,0 +1,70 @@
+# docker compose up --build starts the database, API and web app.
+# Works without a .env: every setting has a default here and .env overrides it.
+# On first start the db container generates the database password and JWT key
+# into the `secrets` volume, unless .env sets POSTGRES_PASSWORD / JWT_SECRET.
+#
+# Web app http://localhost:8080, API http://localhost:4000 (Swagger at /api/docs),
+# Postgres localhost:5433. All bound to 127.0.0.1.
+
+services:
+  db:
+    build: ./database
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-simpleinvoice}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_DB: ${POSTGRES_DB:-simpleinvoice}
+    ports:
+      - '127.0.0.1:${POSTGRES_HOST_PORT:-5433}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - secrets:/run/secrets
+
+  backend:
+    build: ./backend
+    environment:
+      NODE_ENV: production
+      APP_TIMEZONE: ${APP_TIMEZONE:-UTC}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      BACKEND_PORT: ${BACKEND_PORT:-4000}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: '5432'
+      POSTGRES_USER: ${POSTGRES_USER:-simpleinvoice}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: ${POSTGRES_DB:-simpleinvoice}
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-3600}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://localhost:5173}
+      TRUST_PROXY: '1' # nginx in front
+      LOGIN_RATE_LIMIT: ${LOGIN_RATE_LIMIT:-10}
+      SEED_ON_START: ${SEED_ON_START:-true}
+      # Demo login from the README
+      SEED_USER_EMAIL: ${SEED_USER_EMAIL:-admin@simpleinvoice.test}
+      SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-Password123!}
+      SEED_USER_FULLNAME: ${SEED_USER_FULLNAME:-Jordan Lee}
+    ports:
+      - '127.0.0.1:${BACKEND_PORT:-4000}:${BACKEND_PORT:-4000}'
+    volumes:
+      - secrets:/run/secrets:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+    environment:
+      BACKEND_UPSTREAM: backend:${BACKEND_PORT:-4000}
+    ports:
+      - '127.0.0.1:${FRONTEND_PORT:-8080}:80'
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  secrets:
