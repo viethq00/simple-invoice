@@ -1,0 +1,6 @@
+# Shell scripts need LF endings to run in the Linux containers.
+* text=auto eol=lf
+*.sh text eol=lf
+*.png binary
+*.jpg binary
+*.woff2 binary
